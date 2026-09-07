@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sift
 
-## Getting Started
+Automated lead qualification: a form submission gets AI-scored, written to a CRM, and pushed to Slack in one pipeline run — see it happen live from the intake form or the `/dashboard` leads table.
 
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env   # already done if you cloned this repo as-is
+npm run seed            # optional — adds 10 demo leads spanning cold/warm/hot
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) for the intake form, or [http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the leads table.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`parseLead → scoreWithAI → upsertCRM → notifyTeam → logResult`, orchestrated in [`src/lib/pipeline.ts`](src/lib/pipeline.ts) and triggered by `POST /api/intake/[source]`.
 
-## Learn More
+Every external integration is behind a small adapter and works out of the box with **no API keys** — see [`.env.example`](.env.example):
 
-To learn more about Next.js, take a look at the following resources:
+| Layer | Default (no keys set) | With keys set |
+| --- | --- | --- |
+| Database | SQLite file (`dev.db`), zero setup | swap `DATABASE_URL` for Postgres/Supabase |
+| AI scoring | deterministic rule-based scorer ([`src/lib/scoring.ts`](src/lib/scoring.ts)) | Claude API (`ANTHROPIC_API_KEY`) |
+| CRM | lead stored in Sift's own DB, shown on `/dashboard` as the CRM view | Airtable (`AIRTABLE_API_KEY` + `AIRTABLE_BASE_ID`) |
+| Notification | Slack message logged + shown in the result panel | real Slack post (`SLACK_WEBHOOK_URL`), with Resend email fallback (`RESEND_API_KEY`) if the post fails |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Swapping an adapter (e.g. Airtable → HubSpot) means implementing the adapter interface in [`src/lib/crm.ts`](src/lib/crm.ts) — scoring and notification code don't change.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` — start the dev server
+- `npm run seed` — populate the local database with demo leads
+- `npm run build` / `npm start` — production build
+- `npm run lint` — ESLint
