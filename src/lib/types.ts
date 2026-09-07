@@ -1,8 +1,10 @@
-export type Temperature = "cold" | "warm" | "hot";
+export type Temperature = "COLD" | "WARM" | "HOT";
 
-export type IntegrationTarget = "crm" | "slack" | "email";
+export type LeadStatus = "NEW" | "QUALIFIED" | "DISQUALIFIED" | "ROUTED";
 
-export type IntegrationStatus = "success" | "failed" | "skipped";
+export type IntegrationTarget = "CRM" | "SLACK" | "EMAIL";
+
+export type IntegrationStatus = "SUCCESS" | "FAILED" | "SKIPPED";
 
 export interface ParsedLead {
   source: string;
@@ -16,7 +18,7 @@ export interface ParsedLead {
 export interface ScoringResult {
   intent_score: number;
   temperature: Temperature;
-  summary: string;
+  reasoning: string;
   budget_mentioned: boolean;
   timeline: string | null;
   pain_point: string;
@@ -27,11 +29,15 @@ export interface ScoringResult {
 export interface IntegrationAttempt {
   target: IntegrationTarget;
   status: IntegrationStatus;
-  responseSnippet: string;
+  detail: string;
 }
 
 export function temperatureFromScore(score: number): Temperature {
-  if (score >= 70) return "hot";
-  if (score >= 40) return "warm";
-  return "cold";
+  if (score >= 70) return "HOT";
+  if (score >= 40) return "WARM";
+  return "COLD";
+}
+
+export function titleCase(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ParsedLead, ScoringResult, temperatureFromScore } from "./types";
+import { ParsedLead, ScoringResult, Temperature, temperatureFromScore } from "./types";
 
 const SYSTEM_PROMPT =
   "You are a sales development rep's assistant. Given a raw inbound lead message, " +
@@ -14,7 +14,7 @@ const SCORING_TOOL: Anthropic.Tool = {
     properties: {
       intent_score: { type: "integer", minimum: 0, maximum: 100 },
       temperature: { type: "string", enum: ["cold", "warm", "hot"] },
-      summary: { type: "string", description: "One-line summary of the lead." },
+      reasoning: { type: "string", description: "One-line reasoning behind the score." },
       budget_mentioned: { type: "boolean" },
       timeline: { type: ["string", "null"], description: "Timeframe mentioned, if any." },
       pain_point: { type: "string" },
@@ -23,7 +23,7 @@ const SCORING_TOOL: Anthropic.Tool = {
     required: [
       "intent_score",
       "temperature",
-      "summary",
+      "reasoning",
       "budget_mentioned",
       "timeline",
       "pain_point",
@@ -33,6 +33,16 @@ const SCORING_TOOL: Anthropic.Tool = {
 };
 
 const MODEL = "claude-sonnet-5";
+
+interface RawToolInput {
+  intent_score: number;
+  temperature: "cold" | "warm" | "hot";
+  reasoning: string;
+  budget_mentioned: boolean;
+  timeline: string | null;
+  pain_point: string;
+  recommended_action: string;
+}
 
 export async function scoreWithAI(lead: ParsedLead): Promise<ScoringResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -61,8 +71,12 @@ export async function scoreWithAI(lead: ParsedLead): Promise<ScoringResult> {
     );
     if (!toolUse) throw new Error("Model did not return a tool call");
 
-    const input = toolUse.input as Omit<ScoringResult, "model_used">;
-    return { ...input, model_used: MODEL };
+    const input = toolUse.input as RawToolInput;
+    return {
+      ...input,
+      temperature: input.temperature.toUpperCase() as Temperature,
+      model_used: MODEL,
+    };
   } catch (err) {
     console.error("scoreWithAI: falling back to rule-based scorer", err);
     return ruleBasedScore(lead);
@@ -104,7 +118,7 @@ export function ruleBasedScore(lead: ParsedLead): ScoringResult {
   const budgetMentioned = !!budgetMatch;
 
   const timelineMatch = lead.rawMessage.match(TIMELINE_PATTERN);
-  const timeline = timelineMatch ? titleCase(timelineMatch[0].replace(/^by\s+/i, "")) : null;
+  const timeline = timelineMatch ? toTitleCase(timelineMatch[0].replace(/^by\s+/i, "")) : null;
 
   const hasUrgency = URGENCY_WORDS.some((w) => text.includes(w));
   const isVague = VAGUE_PHRASES.some((p) => text.includes(p));
@@ -127,22 +141,22 @@ export function ruleBasedScore(lead: ParsedLead): ScoringResult {
       .find((sentence) => PAIN_KEYWORDS.some((k) => sentence.toLowerCase().includes(k))) ?? null;
 
   const recommendedAction =
-    temperature === "hot"
+    temperature === "HOT"
       ? "Route to AE, respond same day"
-      : temperature === "warm"
+      : temperature === "WARM"
         ? "Add to nurture sequence, follow up within a few days"
         : "Log only, no immediate follow-up";
 
-  const summaryParts = [lead.company ?? lead.name];
-  if (budgetMentioned) summaryParts.push("budget mentioned");
-  if (timeline) summaryParts.push(`timeline ${timeline}`);
-  if (isVague) summaryParts.push("low-intent inquiry");
-  const summary = summaryParts.join(" — ");
+  const reasoningParts = [lead.company ?? lead.name];
+  if (budgetMentioned) reasoningParts.push("budget mentioned");
+  if (timeline) reasoningParts.push(`timeline ${timeline}`);
+  if (isVague) reasoningParts.push("low-intent inquiry");
+  const reasoning = reasoningParts.join(" — ");
 
   return {
     intent_score: score,
     temperature,
-    summary,
+    reasoning,
     budget_mentioned: budgetMentioned,
     timeline,
     pain_point: painSentence?.trim() ?? "Not specified",
@@ -151,6 +165,6 @@ export function ruleBasedScore(lead: ParsedLead): ScoringResult {
   };
 }
 
-function titleCase(s: string): string {
+function toTitleCase(s: string): string {
   return s.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase());
 }

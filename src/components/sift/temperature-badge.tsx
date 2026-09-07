@@ -3,15 +3,15 @@ import { cn } from "@/lib/utils";
 import type { Temperature } from "@/lib/types";
 
 const styles: Record<Temperature, string> = {
-  cold: "border-cold/30 bg-cold/10 text-cold",
-  warm: "border-warm/30 bg-warm/10 text-warm",
-  hot: "border-hot/30 bg-hot/10 text-hot",
+  COLD: "border-cold/30 bg-cold/10 text-cold",
+  WARM: "border-warm/30 bg-warm/10 text-warm",
+  HOT: "border-hot/30 bg-hot/10 text-hot",
 };
 
 const labels: Record<Temperature, string> = {
-  cold: "Cold",
-  warm: "Warm",
-  hot: "Hot",
+  COLD: "Cold",
+  WARM: "Warm",
+  HOT: "Hot",
 };
 
 export function TemperatureBadge({

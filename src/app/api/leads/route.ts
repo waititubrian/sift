@@ -4,6 +4,6 @@ import { Temperature } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   const temperature = request.nextUrl.searchParams.get("temperature") as Temperature | null;
-  const leads = listLeads(temperature);
+  const leads = await listLeads(temperature);
   return NextResponse.json({ leads });
 }

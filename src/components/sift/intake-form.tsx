@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PipelineStepper } from "@/components/sift/pipeline-stepper";
 import { ResultPanel } from "@/components/sift/result-panel";
-import type { LeadRow, AnalysisRow, IntegrationLogRow } from "@/lib/repo";
+import type { Lead, Qualification, RoutingLog } from "@prisma/client";
 import { toast } from "sonner";
 
 const SAMPLE_LEADS = {
@@ -28,9 +28,9 @@ const SAMPLE_LEADS = {
 };
 
 interface IntakeResult {
-  lead: LeadRow;
-  analysis: AnalysisRow;
-  logs: IntegrationLogRow[];
+  lead: Lead;
+  qualification: Qualification;
+  logs: RoutingLog[];
 }
 
 export function IntakeForm() {
@@ -85,7 +85,7 @@ export function IntakeForm() {
       setActiveStep(5);
       setResult(data);
       setPhase("done");
-      toast.success(`Lead scored ${data.analysis.intent_score} — ${data.analysis.temperature}`);
+      toast.success(`Lead scored ${data.qualification.score} — ${data.qualification.temperature}`);
     } catch (err) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setPhase("error");

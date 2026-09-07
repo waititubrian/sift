@@ -33,21 +33,21 @@ class AirtableAdapter implements CrmAdapter {
               Message: lead.rawMessage,
               "Intent Score": analysis.intent_score,
               Temperature: analysis.temperature,
-              Summary: analysis.summary,
+              Reasoning: analysis.reasoning,
             },
           }),
         }
       );
       const body = await res.text();
       if (!res.ok) {
-        return { target: "crm", status: "failed", responseSnippet: body.slice(0, 200) };
+        return { target: "CRM", status: "FAILED", detail: body.slice(0, 200) };
       }
-      return { target: "crm", status: "success", responseSnippet: `Airtable record created: ${body.slice(0, 120)}` };
+      return { target: "CRM", status: "SUCCESS", detail: `Airtable record created: ${body.slice(0, 120)}` };
     } catch (err) {
       return {
-        target: "crm",
-        status: "failed",
-        responseSnippet: err instanceof Error ? err.message : "Unknown Airtable error",
+        target: "CRM",
+        status: "FAILED",
+        detail: err instanceof Error ? err.message : "Unknown Airtable error",
       };
     }
   }
@@ -56,9 +56,9 @@ class AirtableAdapter implements CrmAdapter {
 class LocalAdapter implements CrmAdapter {
   async upsert(lead: ParsedLead & { id: string }, analysis: ScoringResult): Promise<IntegrationAttempt> {
     return {
-      target: "crm",
-      status: "success",
-      responseSnippet: `Stored in Sift as lead ${lead.id} (${analysis.temperature}, score ${analysis.intent_score}). Configure AIRTABLE_API_KEY + AIRTABLE_BASE_ID to write to Airtable instead.`,
+      target: "CRM",
+      status: "SUCCESS",
+      detail: `Stored in Sift as lead ${lead.id} (${analysis.temperature}, score ${analysis.intent_score}). Configure AIRTABLE_API_KEY + AIRTABLE_BASE_ID to write to Airtable instead.`,
     };
   }
 }

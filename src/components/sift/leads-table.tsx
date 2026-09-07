@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TemperatureBadge } from "@/components/sift/temperature-badge";
-import type { LeadWithAnalysis } from "@/lib/repo";
+import type { LeadWithDetails } from "@/lib/repo";
 import type { Temperature } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ type Filter = (typeof FILTERS)[number];
 
 const POLL_MS = 5000;
 
-async function fetcher(url: string): Promise<{ leads: LeadWithAnalysis[] }> {
+async function fetcher(url: string): Promise<{ leads: LeadWithDetails[] }> {
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to load leads");
   return res.json();
@@ -34,10 +34,11 @@ export function LeadsTable() {
   const { data, mutate } = useSWR("/api/leads", fetcher, { refreshInterval: POLL_MS });
   const leads = data?.leads ?? null;
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<LeadWithAnalysis | null>(null);
+  const [selected, setSelected] = useState<LeadWithDetails | null>(null);
   const [reprocessing, setReprocessing] = useState(false);
 
-  const filtered = leads?.filter((l) => filter === "all" || l.analysis?.temperature === filter) ?? [];
+  const filtered =
+    leads?.filter((l) => filter === "all" || l.qualification?.temperature === filter.toUpperCase()) ?? [];
 
   async function reprocess(id: string) {
     setReprocessing(true);
@@ -77,7 +78,8 @@ export function LeadsTable() {
               <TableHead>Lead</TableHead>
               <TableHead>Score</TableHead>
               <TableHead>Temperature</TableHead>
-              <TableHead>Summary</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Reasoning</TableHead>
               <TableHead>Source</TableHead>
               <TableHead>Received</TableHead>
             </TableRow>
@@ -86,7 +88,7 @@ export function LeadsTable() {
             {leads === null &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 6 }).map((__, j) => (
+                  {Array.from({ length: 7 }).map((__, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
@@ -96,7 +98,7 @@ export function LeadsTable() {
 
             {leads !== null && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   No leads yet — submit one from the intake form.
                 </TableCell>
               </TableRow>
@@ -108,20 +110,25 @@ export function LeadsTable() {
                   <div className="font-medium">{lead.name}</div>
                   <div className="text-xs text-muted-foreground">{lead.company || lead.email}</div>
                 </TableCell>
-                <TableCell className="font-mono">{lead.analysis?.intent_score ?? "—"}</TableCell>
+                <TableCell className="font-mono">{lead.qualification?.score ?? "—"}</TableCell>
                 <TableCell>
-                  {lead.analysis ? (
-                    <TemperatureBadge temperature={lead.analysis.temperature as Temperature} />
+                  {lead.qualification ? (
+                    <TemperatureBadge temperature={lead.qualification.temperature as Temperature} />
                   ) : (
                     <Badge variant="secondary">scoring…</Badge>
                   )}
                 </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {lead.status}
+                  </Badge>
+                </TableCell>
                 <TableCell className="max-w-70 truncate text-sm text-muted-foreground">
-                  {lead.analysis?.summary ?? "—"}
+                  {lead.qualification?.reasoning ?? "—"}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">{lead.source}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {new Date(lead.created_at).toLocaleString()}
+                  {new Date(lead.createdAt).toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}
@@ -142,47 +149,54 @@ export function LeadsTable() {
               <div className="flex flex-col gap-6 px-4 pb-6">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-muted-foreground">Raw message</h3>
-                  <p className="rounded-md border bg-muted/40 p-3 text-sm">{selected.raw_message}</p>
+                  <p className="rounded-md border bg-muted/40 p-3 text-sm">{selected.rawMessage}</p>
                 </div>
 
-                {selected.analysis && (
+                {selected.qualification && (
                   <div>
                     <div className="mb-2 flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-muted-foreground">AI analysis</h3>
-                      <TemperatureBadge temperature={selected.analysis.temperature as Temperature} />
+                      <h3 className="text-sm font-medium text-muted-foreground">Qualification</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {selected.status}
+                        </Badge>
+                        <TemperatureBadge temperature={selected.qualification.temperature as Temperature} />
+                      </div>
                     </div>
                     <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
                       <dt className="text-muted-foreground">Score</dt>
-                      <dd className="text-right font-mono">{selected.analysis.intent_score}</dd>
+                      <dd className="text-right font-mono">{selected.qualification.score}</dd>
                       <dt className="text-muted-foreground">Budget mentioned</dt>
                       <dd className="text-right font-mono text-xs">
-                        {selected.analysis.budget_mentioned ? "yes" : "no"}
+                        {selected.qualification.budgetMentioned ? "yes" : "no"}
                       </dd>
                       <dt className="text-muted-foreground">Timeline</dt>
-                      <dd className="text-right font-mono text-xs">{selected.analysis.timeline ?? "—"}</dd>
+                      <dd className="text-right font-mono text-xs">{selected.qualification.timeline ?? "—"}</dd>
+                      <dt className="text-muted-foreground">Reasoning</dt>
+                      <dd className="col-span-2 text-right">{selected.qualification.reasoning}</dd>
                       <dt className="text-muted-foreground">Pain point</dt>
-                      <dd className="col-span-2 text-right">{selected.analysis.pain_point}</dd>
+                      <dd className="col-span-2 text-right">{selected.qualification.painPoint}</dd>
                       <dt className="text-muted-foreground">Recommended action</dt>
-                      <dd className="col-span-2 text-right">{selected.analysis.recommended_action}</dd>
+                      <dd className="col-span-2 text-right">{selected.qualification.recommendedAction}</dd>
                       <dt className="text-muted-foreground">Model</dt>
-                      <dd className="text-right font-mono text-xs">{selected.analysis.model_used}</dd>
+                      <dd className="text-right font-mono text-xs">{selected.qualification.modelUsed}</dd>
                     </dl>
                   </div>
                 )}
 
                 <div>
-                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">Integration log</h3>
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">Routing log</h3>
                   <ul className="flex flex-col gap-2">
-                    {selected.logs.map((log) => (
+                    {selected.routingLogs.map((log) => (
                       <li key={log.id} className="rounded-md border p-2.5 text-xs">
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-medium uppercase">{log.target}</span>
                           <Badge
                             variant="outline"
                             className={
-                              log.status === "success"
+                              log.status === "SUCCESS"
                                 ? "border-cold/30 bg-cold/10 text-cold"
-                                : log.status === "failed"
+                                : log.status === "FAILED"
                                   ? "border-hot/30 bg-hot/10 text-hot"
                                   : "text-muted-foreground"
                             }
@@ -190,9 +204,9 @@ export function LeadsTable() {
                             {log.status}
                           </Badge>
                         </div>
-                        <p className="mt-1 text-muted-foreground">{log.response_snippet}</p>
+                        <p className="mt-1 text-muted-foreground">{log.detail}</p>
                         <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                          {new Date(log.attempted_at).toLocaleString()}
+                          {new Date(log.attemptedAt).toLocaleString()}
                         </p>
                       </li>
                     ))}

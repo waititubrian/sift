@@ -46,7 +46,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/intake/
     return NextResponse.json(
       {
         lead: result.lead,
-        analysis: result.analysis,
+        qualification: result.qualification,
         logs: result.logs,
       },
       { status: 201 }

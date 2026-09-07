@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// DATABASE_URL: Neon's pooled connection string in production (required for
+// Vercel serverless functions). DIRECT_URL: Neon's direct/unpooled connection
+// string, used only for migrations. Locally both point at the same Docker
+// Postgres instance. See README.md.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  DISQUALIFIED
+  ROUTED
+}
+
+enum Temperature {
+  COLD
+  WARM
+  HOT
+}
+
+enum IntegrationTarget {
+  CRM
+  SLACK
+  EMAIL
+}
+
+enum IntegrationStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  source     String
+  name       String
+  email      String
+  company    String?
+  rawMessage String
+  rawPayload Json
+  status     LeadStatus @default(NEW)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  qualification Qualification?
+  routingLogs   RoutingLog[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+/// The AI's qualification of a lead: a score plus the reasoning behind it.
+model Qualification {
+  id                String      @id @default(cuid())
+  leadId            String      @unique
+  lead              Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  score             Int
+  temperature       Temperature
+  reasoning         String
+  budgetMentioned   Boolean
+  timeline          String?
+  painPoint         String
+  recommendedAction String
+  modelUsed         String
+  createdAt         DateTime    @default(now())
+}
+
+/// A timestamped record of a routing/notification attempt for a lead
+/// (CRM write, Slack post, email fallback), kept even when it fails.
+model RoutingLog {
+  id          String            @id @default(cuid())
+  leadId      String
+  lead        Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  target      IntegrationTarget
+  status      IntegrationStatus
+  detail      String
+  attemptedAt DateTime          @default(now())
+
+  @@index([leadId])
+}

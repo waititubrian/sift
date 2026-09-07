@@ -74,12 +74,12 @@ const SEED_LEADS: Omit<ParsedLead, "source" | "rawPayload">[] = [
 async function main() {
   console.log(`Seeding ${SEED_LEADS.length} demo leads…`);
   for (const lead of SEED_LEADS) {
-    const { analysis } = await runPipeline({
+    const { qualification } = await runPipeline({
       source: "seed",
       rawPayload: { seed: true },
       ...lead,
     });
-    console.log(`  ${lead.name.padEnd(16)} score ${analysis.intent_score} (${analysis.temperature})`);
+    console.log(`  ${lead.name.padEnd(16)} score ${qualification.score} (${qualification.temperature})`);
   }
   console.log("Done.");
 }

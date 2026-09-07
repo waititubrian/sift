@@ -1,26 +1,36 @@
 import { scoreWithAI } from "./scoring";
 import { upsertCRM } from "./crm";
 import { notifyTeam } from "./notify";
-import { ParsedLead } from "./types";
-import { insertLead, insertAnalysis, upsertAnalysis, insertIntegrationLogs, getLead } from "./repo";
+import { ParsedLead, LeadStatus } from "./types";
+import {
+  insertLead,
+  insertQualification,
+  upsertQualification,
+  insertRoutingLogs,
+  getLead,
+  updateLeadStatus,
+} from "./repo";
 
 /** parseLead -> scoreWithAI -> upsertCRM -> notifyTeam -> logResult */
 export async function runPipeline(parsed: ParsedLead) {
-  const lead = insertLead(parsed);
+  const lead = await insertLead(parsed);
 
   const analysis = await scoreWithAI(parsed);
-  const savedAnalysis = insertAnalysis(lead.id, analysis);
+  const qualification = await insertQualification(lead.id, analysis);
 
   const crmAttempt = await upsertCRM({ ...parsed, id: lead.id }, analysis);
   const notifyAttempts = await notifyTeam(parsed, analysis);
+  const logs = await insertRoutingLogs(lead.id, [crmAttempt, ...notifyAttempts]);
 
-  const logs = insertIntegrationLogs(lead.id, [crmAttempt, ...notifyAttempts]);
+  const routed = notifyAttempts.some((a) => a.status === "SUCCESS");
+  const status: LeadStatus = analysis.temperature === "COLD" ? "DISQUALIFIED" : routed ? "ROUTED" : "QUALIFIED";
+  const updatedLead = await updateLeadStatus(lead.id, status);
 
-  return { lead, analysis: savedAnalysis, logs };
+  return { lead: updatedLead, qualification, logs };
 }
 
 export async function reprocessLead(leadId: string) {
-  const lead = getLead(leadId);
+  const lead = await getLead(leadId);
   if (!lead) throw new Error(`Lead ${leadId} not found`);
 
   const parsed: ParsedLead = {
@@ -28,20 +38,26 @@ export async function reprocessLead(leadId: string) {
     name: lead.name,
     email: lead.email,
     company: lead.company,
-    rawMessage: lead.raw_message,
-    rawPayload: JSON.parse(lead.raw_payload),
+    rawMessage: lead.rawMessage,
+    rawPayload: lead.rawPayload as Record<string, unknown>,
   };
 
   const analysis = await scoreWithAI(parsed);
-  const savedAnalysis = upsertAnalysis(lead.id, analysis);
+  const qualification = await upsertQualification(lead.id, analysis);
 
-  const logs = insertIntegrationLogs(lead.id, [
+  const logs = await insertRoutingLogs(lead.id, [
     {
-      target: "crm",
-      status: "success",
-      responseSnippet: `Reprocessed: score ${analysis.intent_score} (${analysis.temperature})`,
+      target: "CRM",
+      status: "SUCCESS",
+      detail: `Reprocessed: score ${analysis.intent_score} (${analysis.temperature})`,
     },
   ]);
 
-  return { lead, analysis: savedAnalysis, logs };
+  // Reprocessing only re-scores; it doesn't re-notify, so a lead already
+  // routed stays routed unless the new score disqualifies it outright.
+  const status: LeadStatus =
+    analysis.temperature === "COLD" ? "DISQUALIFIED" : lead.status === "ROUTED" ? "ROUTED" : "QUALIFIED";
+  const updatedLead = await updateLeadStatus(lead.id, status);
+
+  return { lead: updatedLead, qualification, logs };
 }
