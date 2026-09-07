@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/sift/theme-toggle";
 
 export function SiteHeader({ active }: { active: "home" | "dashboard" }) {
   return (
@@ -8,20 +9,23 @@ export function SiteHeader({ active }: { active: "home" | "dashboard" }) {
           <span className="size-2 rounded-full bg-warm" />
           <span className="font-heading text-lg font-semibold">Sift</span>
         </Link>
-        <nav className="flex items-center gap-5 text-sm">
-          <Link
-            href="/"
-            className={active === "home" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-          >
-            Intake
-          </Link>
-          <Link
-            href="/dashboard"
-            className={active === "dashboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-          >
-            Dashboard
-          </Link>
-        </nav>
+        <div className="flex items-center gap-5">
+          <nav className="flex items-center gap-5 text-sm">
+            <Link
+              href="/"
+              className={active === "home" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            >
+              Intake
+            </Link>
+            <Link
+              href="/dashboard"
+              className={active === "dashboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            >
+              Dashboard
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

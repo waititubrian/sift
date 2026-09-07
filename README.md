@@ -2,6 +2,8 @@
 
 Automated lead qualification: a form submission gets AI-scored, written to a CRM, and pushed to Slack in one pipeline run — see it happen live from the intake form or the `/dashboard` leads table.
 
+This doc is a quick-start. For the full design — data model, pipeline internals, adapter pattern, API reference — see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
 ## Getting started
 
 ```bash
