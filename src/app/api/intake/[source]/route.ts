@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { verifySignature } from "@/lib/hmac";
-import { runPipeline } from "@/lib/pipeline";
+import { leadService } from "@/services/lead.service";
 
 const intakeSchema = z.object({
   name: z.string().min(1).max(200),
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/intake/
   const { name, email, company, message } = parsed.data;
 
   try {
-    const result = await runPipeline({
+    const result = await leadService.create({
       source,
       name,
       email,

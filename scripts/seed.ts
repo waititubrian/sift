@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { runPipeline } from "../src/lib/pipeline";
+import { leadService } from "../src/services/lead.service";
 import type { ParsedLead } from "../src/lib/types";
 
 const SEED_LEADS: Omit<ParsedLead, "source" | "rawPayload">[] = [
@@ -74,7 +74,7 @@ const SEED_LEADS: Omit<ParsedLead, "source" | "rawPayload">[] = [
 async function main() {
   console.log(`Seeding ${SEED_LEADS.length} demo leads…`);
   for (const lead of SEED_LEADS) {
-    const { qualification } = await runPipeline({
+    const { qualification } = await leadService.create({
       source: "seed",
       rawPayload: { seed: true },
       ...lead,

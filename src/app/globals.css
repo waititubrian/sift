@@ -59,7 +59,7 @@
   --card-foreground: #1A2130;
   --popover: #FFFFFF;
   --popover-foreground: #1A2130;
-  --primary: #A8691A;
+  --primary: #18181B;
   --primary-foreground: #FFFFFF;
   --secondary: #EDEFF3;
   --secondary-foreground: #1A2130;
@@ -70,7 +70,7 @@
   --destructive: #C1442C;
   --border: #DCE0E8;
   --input: #DCE0E8;
-  --ring: #A8691A;
+  --ring: #18181B;
   --chart-1: #A8691A;
   --chart-2: #3E7CB1;
   --chart-3: #B8791C;
@@ -79,12 +79,12 @@
   --radius: 0.5rem;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A2130;
-  --sidebar-primary: #A8691A;
+  --sidebar-primary: #18181B;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #EDEFF3;
   --sidebar-accent-foreground: #1A2130;
   --sidebar-border: #DCE0E8;
-  --sidebar-ring: #A8691A;
+  --sidebar-ring: #18181B;
 
   --surface-alt: #EDEFF3;
   --cold: #3E7CB1;
@@ -99,7 +99,7 @@
   --card-foreground: #E7E9EE;
   --popover: #1A2029;
   --popover-foreground: #E7E9EE;
-  --primary: #DE9E4F;
+  --primary: #FAFAFA;
   --primary-foreground: #12161F;
   --secondary: #212836;
   --secondary-foreground: #E7E9EE;
@@ -110,7 +110,7 @@
   --destructive: #E27358;
   --border: #2C3341;
   --input: #2C3341;
-  --ring: #DE9E4F;
+  --ring: #FAFAFA;
   --chart-1: #DE9E4F;
   --chart-2: #6FA8D6;
   --chart-3: #DE9E4F;
@@ -118,12 +118,12 @@
   --chart-5: #A6AEBF;
   --sidebar: #1A2029;
   --sidebar-foreground: #E7E9EE;
-  --sidebar-primary: #DE9E4F;
+  --sidebar-primary: #FAFAFA;
   --sidebar-primary-foreground: #12161F;
   --sidebar-accent: #212836;
   --sidebar-accent-foreground: #E7E9EE;
   --sidebar-border: #2C3341;
-  --sidebar-ring: #DE9E4F;
+  --sidebar-ring: #FAFAFA;
 
   --surface-alt: #212836;
   --cold: #6FA8D6;
@@ -151,4 +151,24 @@
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+  .animate-marquee {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+
+.marquee-pause-on-hover:hover .animate-marquee {
+  animation-play-state: paused;
 }

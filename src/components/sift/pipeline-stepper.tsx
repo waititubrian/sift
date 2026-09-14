@@ -1,11 +1,12 @@
+import { Webhook, Sparkles, Route as RouteIcon, BellRing, ScrollText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { label: "Capture", detail: "Payload received" },
-  { label: "Score", detail: "AI extracts signals" },
-  { label: "Route", detail: "Temperature decided" },
-  { label: "Notify", detail: "Slack / email sent" },
-  { label: "Log", detail: "Attempt recorded" },
+  { label: "Capture", detail: "Payload received", icon: Webhook },
+  { label: "Score", detail: "AI extracts signals", icon: Sparkles },
+  { label: "Route", detail: "Temperature decided", icon: RouteIcon },
+  { label: "Notify", detail: "Slack / email sent", icon: BellRing },
+  { label: "Log", detail: "Attempt recorded", icon: ScrollText },
 ] as const;
 
 /**
@@ -22,15 +23,15 @@ export function PipelineStepper({ activeIndex }: { activeIndex: number }) {
             <div className="flex flex-col items-center gap-1.5 text-center">
               <div
                 className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-full border font-mono text-xs transition-colors duration-300",
+                  "flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
                   done
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground dark:bg-transparent dark:text-primary"
                     : active
                       ? "border-primary text-primary animate-pulse"
                       : "border-border text-muted-foreground"
                 )}
               >
-                {i + 1}
+                <step.icon className="size-4" strokeWidth={2.25} />
               </div>
               <div className="w-20">
                 <div

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Funnel } from "lucide-react";
 import { ThemeToggle } from "@/components/sift/theme-toggle";
 
 export function SiteHeader({ active }: { active: "home" | "intake" | "dashboard" }) {
@@ -6,7 +7,7 @@ export function SiteHeader({ active }: { active: "home" | "intake" | "dashboard"
     <header className="border-b border-border">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <span className="size-2 rounded-full bg-warm" />
+          <Funnel className="size-4.5 text-warm" strokeWidth={2.25} />
           <span className="font-heading text-lg font-semibold">Sift</span>
         </Link>
         <div className="flex items-center gap-5">

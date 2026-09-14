@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TemperatureBadge } from "@/components/sift/temperature-badge";
-import type { LeadWithDetails } from "@/lib/repo";
+import type { LeadWithDetails } from "@/repositories/lead.repository";
 import type { Temperature } from "@/lib/types";
 import { toast } from "sonner";
 

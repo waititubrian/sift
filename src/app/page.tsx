@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/sift/site-header";
 import { PipelineStepper } from "@/components/sift/pipeline-stepper";
+import { CompanyMarquee } from "@/components/sift/company-marquee";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -82,22 +83,16 @@ export default function Home() {
             Built for teams like these{" "}
             <span className="normal-case italic">(illustrative demo data, not real customers)</span>
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-            {DEMO_COMPANIES.map((name) => (
-              <span key={name} className="font-heading text-lg text-muted-foreground">
-                {name}
-              </span>
-            ))}
-          </div>
+          <CompanyMarquee names={DEMO_COMPANIES} />
         </div>
 
         {/* Closing CTA */}
-        <Card className="border-primary/30 bg-accent">
+        <Card className="bg-primary text-primary-foreground">
           <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-            <h2 className="font-heading text-2xl font-semibold text-accent-foreground">
+            <h2 className="font-heading text-2xl font-semibold">
               See a lead go from submission to Slack ping in real time.
             </h2>
-            <Link href="/intake" className={cn(buttonVariants({ size: "lg" }))}>
+            <Link href="/intake" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
               Try the live demo →
             </Link>
           </CardContent>
