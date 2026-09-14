@@ -86,7 +86,7 @@ export function ResultPanel({ result }: ResultPanelProps) {
           </CardHeader>
           <CardContent>
             {slackLog && (
-              <p className="rounded-md bg-accent px-3 py-2 text-sm text-accent-foreground">{slackLog.detail}</p>
+              <p className="rounded-md border bg-muted px-3 py-2 text-sm text-foreground">{slackLog.detail}</p>
             )}
           </CardContent>
         </Card>

@@ -57,8 +57,17 @@ export function IntakeForm() {
     setMessage(sample.message);
   }
 
+  const isSampleUnedited = Object.values(SAMPLE_LEADS).some(
+    (sample) =>
+      name === sample.name && email === sample.email && company === sample.company && message === sample.message
+  );
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSampleUnedited) {
+      toast.error("That's the example as-is — change a detail before submitting.");
+      return;
+    }
     setPhase("loading");
     setResult(null);
     setActiveStep(0);
@@ -128,23 +137,32 @@ export function IntakeForm() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="message">What are you looking for?</Label>
+              <p className="text-xs text-muted-foreground">
+                Mention team size, budget, and timeline — that&apos;s what the scorer looks for. Vague
+                inquiries score low on purpose.
+              </p>
               <Textarea
                 id="message"
                 required
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your project…"
+                placeholder="e.g. We're a 30-person team, budget ~$20k, hoping to launch by Q2."
               />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => fillSample("hot")}>
-                  Fill hot-lead example
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => fillSample("cold")}>
-                  Fill cold-lead example
-                </Button>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => fillSample("hot")}>
+                    Fill hot-lead example
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => fillSample("cold")}>
+                    Fill cold-lead example
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Tip: tweak the details before submitting — that&apos;s what changes the score.
+                </p>
               </div>
               <Button type="submit" disabled={phase === "loading"}>
                 {phase === "loading" ? "Submitting…" : "Submit"}
