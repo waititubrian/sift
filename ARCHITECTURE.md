@@ -173,10 +173,11 @@ src/
     lead.service.ts          business logic: create (5-step pipeline), reprocess, list
 scripts/
   seed.ts                   populates 10 demo leads spanning the rubric
+  clear-leads.ts            deletes every lead (cascades to qualifications/routing logs)
 docker-compose.yml           local Postgres
 ```
 
-> **Seed data is tagged, not hidden.** Every lead `npm run seed` creates has `source: "seed"`, visible in the dashboard's Source column right alongside real submissions (e.g. `source: "website"` from the intake form). Nothing distinguishes them beyond that field — there's no separate "demo mode" — so if you've run `npm run seed` and see leads you don't recognize, that's why. Delete them with `DELETE FROM "Lead" WHERE source = 'seed';` (cascades to their `Qualification`/`RoutingLog` rows) or via `npm run db:studio`.
+> **Seed data is tagged, not hidden.** Every lead `npm run seed` creates has `source: "seed"`, visible in the dashboard's Source column right alongside real submissions (e.g. `source: "website"` from the intake form). Nothing distinguishes them beyond that field — there's no separate "demo mode" — so if you've run `npm run seed` and see leads you don't recognize, that's why. To clear *all* leads regardless of source (not just seeded ones) and have the dashboard go back to empty, run `npm run db:clear` (`scripts/clear-leads.ts` — `prisma.lead.deleteMany()`, cascades to `Qualification`/`RoutingLog`); `npm run db:studio` also works for deleting rows selectively.
 
 ## 8. Environment variables
 

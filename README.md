@@ -83,5 +83,6 @@ Both commands were verified against real Postgres containers as part of this set
 - `npm run db:deploy` — apply committed migrations in production (`prisma migrate deploy`)
 - `npm run db:studio` — browse the database (`prisma studio`)
 - `npm run seed` — populate the database with demo leads
+- `npm run db:clear` — delete every lead (and their qualifications/routing logs) so the dashboard goes back to empty; re-run `npm run seed` afterward if you want the demo data back
 - `npm run build` / `npm start` — production build
 - `npm run lint` — ESLint
