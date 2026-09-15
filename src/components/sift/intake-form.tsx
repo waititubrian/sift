@@ -108,9 +108,7 @@ export function IntakeForm() {
       <Card>
         <CardHeader>
           <CardTitle>Website Contact Form</CardTitle>
-          <CardDescription>
-            Simulates an inbound submission — this is what a prospect fills out on your site.
-          </CardDescription>
+          <CardDescription>This is what a prospect fills out on your site.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

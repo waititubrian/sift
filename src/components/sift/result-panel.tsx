@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TemperatureBadge } from "@/components/sift/temperature-badge";
+import { StatusBadge } from "@/components/sift/status-badge";
 import type { Lead, Qualification, RoutingLog } from "@prisma/client";
-import type { Temperature } from "@/lib/types";
+import type { LeadStatus, Temperature } from "@/lib/types";
 import Link from "next/link";
 
 interface ResultPanelProps {
@@ -26,9 +26,7 @@ export function ResultPanel({ result }: ResultPanelProps) {
           <div className="flex items-center justify-between">
             <CardTitle>AI qualification</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="font-mono">
-                {lead.status}
-              </Badge>
+              <StatusBadge status={lead.status as LeadStatus} />
               <TemperatureBadge temperature={qualification.temperature as Temperature} />
             </div>
           </div>
@@ -80,7 +78,7 @@ export function ResultPanel({ result }: ResultPanelProps) {
                 : slackLog?.status === "SUCCESS"
                   ? "Posted to Slack"
                   : slackLog?.status === "SKIPPED"
-                    ? "Simulated — set SLACK_WEBHOOK_URL to post for real"
+                    ? "Slack not connected — add SLACK_WEBHOOK_URL to enable live alerts"
                     : "Slack post failed, email fallback attempted"}
             </CardDescription>
           </CardHeader>

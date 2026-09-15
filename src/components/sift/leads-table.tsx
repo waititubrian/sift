@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import useSWR from "swr";
+import { Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -15,14 +18,33 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TemperatureBadge } from "@/components/sift/temperature-badge";
+import { StatusBadge } from "@/components/sift/status-badge";
 import type { LeadWithDetails } from "@/repositories/lead.repository";
-import type { Temperature } from "@/lib/types";
+import { titleCase, type LeadStatus, type Temperature } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 
-const FILTERS = ["all", "hot", "warm", "cold"] as const;
-type Filter = (typeof FILTERS)[number];
+const TEMP_FILTERS = ["all", "hot", "warm", "cold"] as const;
+type TempFilter = (typeof TEMP_FILTERS)[number];
 
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "qualified", label: "Qualified" },
+  { value: "disqualified", label: "Disqualified" },
+] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number]["value"];
+
+const PAGE_SIZE = 10;
 const POLL_MS = 5000;
+
+// Display-only relabeling — the underlying `source` value in the database is
+// unchanged (still "seed"), this just controls how it reads in the UI. Any
+// other source (e.g. "website") falls back to a title-cased version of the
+// raw value rather than showing it lowercase.
+const SOURCE_LABELS: Record<string, string> = { seed: "Import" };
+function displaySource(source: string): string {
+  return SOURCE_LABELS[source] ?? titleCase(source);
+}
 
 async function fetcher(url: string): Promise<{ leads: LeadWithDetails[] }> {
   const res = await fetch(url);
@@ -33,12 +55,39 @@ async function fetcher(url: string): Promise<{ leads: LeadWithDetails[] }> {
 export function LeadsTable() {
   const { data, mutate } = useSWR("/api/leads", fetcher, { refreshInterval: POLL_MS });
   const leads = data?.leads ?? null;
-  const [filter, setFilter] = useState<Filter>("all");
+  const [tempFilter, setTempFilter] = useState<TempFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<LeadWithDetails | null>(null);
   const [reprocessing, setReprocessing] = useState(false);
 
-  const filtered =
-    leads?.filter((l) => filter === "all" || l.qualification?.temperature === filter.toUpperCase()) ?? [];
+  // Reset to page 1 whenever a filter changes, without an Effect (React's
+  // documented "adjust state during render" pattern).
+  const filterKey = `${tempFilter}|${statusFilter}|${search}`;
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey);
+    setPage(1);
+  }
+
+  const searchTerm = search.trim().toLowerCase();
+  const filtered = (leads ?? []).filter((l) => {
+    if (tempFilter !== "all" && l.qualification?.temperature !== tempFilter.toUpperCase()) return false;
+    if (statusFilter !== "all" && l.status !== statusFilter.toUpperCase()) return false;
+    if (searchTerm) {
+      const haystack = `${l.name} ${l.email} ${l.company ?? ""} ${l.qualification?.reasoning ?? ""}`.toLowerCase();
+      if (!haystack.includes(searchTerm)) return false;
+    }
+    return true;
+  });
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const endIdx = Math.min(startIdx + PAGE_SIZE, total);
+  const pageItems = filtered.slice(startIdx, endIdx);
 
   async function reprocess(id: string) {
     setReprocessing(true);
@@ -58,30 +107,55 @@ export function LeadsTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-          <TabsList>
-            {FILTERS.map((f) => (
-              <TabsTrigger key={f} value={f} className="capitalize">
-                {f}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <span className="text-xs text-muted-foreground">Refreshes every {POLL_MS / 1000}s</span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs value={tempFilter} onValueChange={(v) => setTempFilter(v as TempFilter)}>
+            <TabsList>
+              {TEMP_FILTERS.map((f) => (
+                <TabsTrigger key={f} value={f} className="capitalize">
+                  {f}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search leads…"
+              className="w-56 pl-8"
+            />
+          </div>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Refreshes every {POLL_MS / 1000}s</span>
+        </div>
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Lead</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead>Temperature</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Reasoning</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Received</TableHead>
+              <TableHead className="text-left">Lead</TableHead>
+              <TableHead className="text-right">Score</TableHead>
+              <TableHead className="text-center">Temperature</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-left">Reasoning</TableHead>
+              <TableHead className="text-left">Source</TableHead>
+              <TableHead className="text-right">Received</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +163,7 @@ export function LeadsTable() {
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
                   {Array.from({ length: 7 }).map((__, j) => (
-                    <TableCell key={j}>
+                    <TableCell key={j} className="py-3">
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
@@ -99,41 +173,72 @@ export function LeadsTable() {
             {leads !== null && filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  No leads yet — submit one from the intake form.
+                  {leads.length === 0
+                    ? "No leads yet — submit one from the intake form."
+                    : "No leads match these filters — try adjusting the search or status."}
                 </TableCell>
               </TableRow>
             )}
 
-            {filtered.map((lead) => (
+            {pageItems.map((lead) => (
               <TableRow key={lead.id} className="cursor-pointer" onClick={() => setSelected(lead)}>
-                <TableCell>
-                  <div className="font-medium">{lead.name}</div>
-                  <div className="text-xs text-muted-foreground">{lead.company || lead.email}</div>
+                <TableCell className="py-3 text-left">
+                  <div className="font-semibold text-foreground">{lead.name}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{lead.company || lead.email}</div>
                 </TableCell>
-                <TableCell className="font-mono">{lead.qualification?.score ?? "—"}</TableCell>
-                <TableCell>
+                <TableCell className="py-3 text-right font-mono">{lead.qualification?.score ?? "—"}</TableCell>
+                <TableCell className="py-3 text-center">
                   {lead.qualification ? (
                     <TemperatureBadge temperature={lead.qualification.temperature as Temperature} />
                   ) : (
-                    <Badge variant="secondary">scoring…</Badge>
+                    <Badge variant="secondary" className="w-20">
+                      scoring…
+                    </Badge>
                   )}
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {lead.status}
-                  </Badge>
+                <TableCell className="py-3 text-center">
+                  <StatusBadge status={lead.status as LeadStatus} />
                 </TableCell>
-                <TableCell className="max-w-70 truncate text-sm text-muted-foreground">
+                <TableCell className="max-w-70 truncate py-3 text-left text-sm text-muted-foreground">
                   {lead.qualification?.reasoning ?? "—"}
                 </TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{lead.source}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(lead.createdAt).toLocaleString()}
+                <TableCell className="py-3 text-left font-mono text-xs text-muted-foreground">
+                  {displaySource(lead.source)}
+                </TableCell>
+                <TableCell className="py-3 text-right text-xs text-muted-foreground">
+                  {formatDate(lead.createdAt)}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-sm">
+        <span className="text-muted-foreground">
+          {total === 0 ? "Showing 0 leads" : `Showing ${startIdx + 1}–${endIdx} of ${total} lead${total === 1 ? "" : "s"}`}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage <= 1}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous
+          </Button>
+          <span className="font-mono text-xs text-muted-foreground">
+            {currentPage} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage >= totalPages}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
@@ -143,7 +248,7 @@ export function LeadsTable() {
               <SheetHeader>
                 <SheetTitle>{selected.name}</SheetTitle>
                 <SheetDescription>
-                  {selected.company || selected.email} · via {selected.source}
+                  {selected.company || selected.email} · via {displaySource(selected.source)}
                 </SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-6 px-4 pb-6">
@@ -157,9 +262,7 @@ export function LeadsTable() {
                     <div className="mb-2 flex items-center justify-between">
                       <h3 className="text-sm font-medium text-muted-foreground">Qualification</h3>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {selected.status}
-                        </Badge>
+                        <StatusBadge status={selected.status as LeadStatus} />
                         <TemperatureBadge temperature={selected.qualification.temperature as Temperature} />
                       </div>
                     </div>
@@ -205,9 +308,7 @@ export function LeadsTable() {
                           </Badge>
                         </div>
                         <p className="mt-1 text-muted-foreground">{log.detail}</p>
-                        <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                          {new Date(log.attemptedAt).toLocaleString()}
-                        </p>
+                        <p className="mt-1 text-[0.65rem] text-muted-foreground">{formatDate(log.attemptedAt)}</p>
                       </li>
                     ))}
                   </ul>

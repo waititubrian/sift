@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Funnel } from "lucide-react";
 import { ThemeToggle } from "@/components/sift/theme-toggle";
 
-export function SiteHeader({ active }: { active: "home" | "intake" | "dashboard" }) {
+export function SiteHeader({ active }: { active: "home" | "intake" | "dashboard" | "docs" }) {
   return (
-    <header className="border-b border-border">
+    <header className="sticky top-0 z-10 border-b border-border bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
           <Funnel className="size-4.5 text-warm" strokeWidth={2.25} />

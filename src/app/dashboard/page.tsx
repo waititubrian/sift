@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/sift/site-header";
+import { SiteFooter } from "@/components/sift/site-footer";
 import { LeadsTable } from "@/components/sift/leads-table";
 
 export default function DashboardPage() {
@@ -12,6 +13,7 @@ export default function DashboardPage() {
         </div>
         <LeadsTable />
       </main>
+      <SiteFooter />
     </div>
   );
 }

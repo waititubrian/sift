@@ -22,7 +22,7 @@ export function TemperatureBadge({
   className?: string;
 }) {
   return (
-    <Badge variant="outline" className={cn("gap-1.5 font-mono", styles[temperature], className)}>
+    <Badge variant="outline" className={cn("w-20 gap-1.5 font-mono", styles[temperature], className)}>
       <span className="size-1.5 rounded-full bg-current" />
       {labels[temperature]}
     </Badge>

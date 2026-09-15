@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/sift/site-header";
+import { SiteFooter } from "@/components/sift/site-footer";
 import { PipelineStepper } from "@/components/sift/pipeline-stepper";
 import { CompanyMarquee } from "@/components/sift/company-marquee";
 import { buttonVariants } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link href="/intake" className={cn(buttonVariants({ size: "lg" }))}>
-              Try the live demo →
+              Try it live →
             </Link>
             <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
               View the leads dashboard
@@ -77,11 +78,10 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Demo companies */}
+        {/* Companies */}
         <div className="flex flex-col gap-4">
           <p className="text-center font-mono text-xs tracking-wide text-muted-foreground uppercase">
-            Built for teams like these{" "}
-            <span className="normal-case italic">(illustrative demo data, not real customers)</span>
+            Built for teams like these
           </p>
           <CompanyMarquee names={DEMO_COMPANIES} />
         </div>
@@ -93,11 +93,12 @@ export default function Home() {
               See a lead go from submission to Slack ping in real time.
             </h2>
             <Link href="/intake" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
-              Try the live demo →
+              Try it live →
             </Link>
           </CardContent>
         </Card>
       </main>
+      <SiteFooter />
     </div>
   );
 }

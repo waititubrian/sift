@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/sift/site-header";
+import { SiteFooter } from "@/components/sift/site-footer";
 import { IntakeForm } from "@/components/sift/intake-form";
 
 export const metadata: Metadata = {
-  title: "Try the demo — Sift",
+  title: "Intake — Sift",
 };
 
 export default function IntakePage() {
@@ -26,6 +27,7 @@ export default function IntakePage() {
         </div>
         <IntakeForm />
       </main>
+      <SiteFooter />
     </div>
   );
 }
