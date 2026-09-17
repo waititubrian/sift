@@ -44,3 +44,6 @@ next-env.d.ts
 # AI agent
 CLAUDE.md
 AGENTS.md
+
+# internal dev doc — not meant for the public repo
+ARCHITECTURE.md

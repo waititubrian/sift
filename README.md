@@ -2,20 +2,23 @@
 
 Automated lead qualification: a form submission gets AI-scored, written to a CRM, and pushed to Slack in one pipeline run — see it happen live from the intake form or the `/dashboard` leads table.
 
-This doc is a quick-start. For the full design — data model, pipeline internals, adapter pattern, API reference — see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+This doc covers everything you need to get it running: setup, data model, how the pipeline works, and deployment.
 
 ## Getting started
 
 ```bash
 npm install
 cp .env.example .env      # already done if you cloned this repo as-is
+npx clerk@latest init     # creates a free Clerk app and writes its keys into .env — required, see below
 docker compose up -d      # starts local Postgres on localhost:5433
 npm run db:migrate        # applies prisma/migrations to it
 npm run seed               # optional — adds 10 demo leads spanning cold/warm/hot
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) for the intake form, or [http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the leads table.
+Open [http://localhost:3000](http://localhost:3000) for the intake form, or [http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the leads table (you'll be redirected to sign in first).
+
+> **Clerk is required, not optional.** `ClerkProvider` wraps the whole app in the root layout, so every page — not just `/dashboard` — throws at runtime without `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` set. `npx clerk@latest init` is Clerk's own non-interactive setup command — it creates a Clerk application and writes the keys straight into `.env` for you, no dashboard clicking required.
 
 > **Why 5433, not 5432?** If you run more than one project's Postgres in Docker, each one binding the default `5432` collides — whichever started first wins the port, and the other silently connects to the wrong database (you'll see errors like `Database "sift" does not exist` instead of a connection failure, because the port answers, just from the wrong container). This project's Postgres is on `5433` to avoid that. Free to change back to `5432` in `docker-compose.yml` + `.env` if you don't run other local Postgres containers.
 
@@ -29,7 +32,7 @@ Three tables, defined in [`prisma/schema.prisma`](prisma/schema.prisma):
 
 ## How it works
 
-`parseLead → scoreWithAI → upsertCRM → notifyTeam → logResult`, orchestrated in [`src/lib/pipeline.ts`](src/lib/pipeline.ts) and triggered by `POST /api/intake/[source]`.
+`scoreWithAI → upsertCRM → notifyTeam → logResult`, orchestrated in [`src/services/lead.service.ts`](src/services/lead.service.ts) and triggered by `POST /api/intake/[source]`.
 
 Every external integration is behind a small adapter and works out of the box with **no API keys** — see [`.env.example`](.env.example):
 
@@ -40,6 +43,13 @@ Every external integration is behind a small adapter and works out of the box wi
 | Notification | Slack message logged + shown in the result panel | real Slack post (`SLACK_WEBHOOK_URL`), with Resend email fallback (`RESEND_API_KEY`) if the post fails |
 
 Swapping an adapter (e.g. Airtable → HubSpot) means implementing the adapter interface in [`src/lib/crm.ts`](src/lib/crm.ts) — scoring and notification code don't change.
+
+## Security
+
+- **`/dashboard` and the leads API** (`GET /api/leads`, `POST /api/leads/:id/reprocess`) require a signed-in Clerk session.
+- **`POST /api/intake/:source`** is intentionally public (it's a webhook endpoint), but is rate-limited (20 req/min per source+IP) and supports optional per-source HMAC request signing (`INTAKE_SECRET_<SOURCE>`).
+- No secrets are ever sent to the browser — every API key lives server-side only and is read via `process.env`, never a `NEXT_PUBLIC_*` var.
+- Known limitations worth knowing before a real deploy: the rate limiter is in-memory per-process (each serverless instance keeps its own bucket, so the effective limit multiplies with instance count), and there's no automated test suite (by choice — correctness has been verified through repeated manual testing against a real Postgres instance instead).
 
 ## Database: local Docker, production Neon
 

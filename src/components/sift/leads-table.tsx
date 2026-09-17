@@ -29,18 +29,21 @@ type TempFilter = (typeof TEMP_FILTERS)[number];
 
 const STATUS_FILTERS = [
   { value: "all", label: "All statuses" },
+  { value: "new", label: "New" },
   { value: "qualified", label: "Qualified" },
+  { value: "routed", label: "Routed" },
   { value: "disqualified", label: "Disqualified" },
 ] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number]["value"];
+const STATUS_FILTER_LABELS: Record<StatusFilter, string> = Object.fromEntries(
+  STATUS_FILTERS.map((s) => [s.value, s.label])
+) as Record<StatusFilter, string>;
 
 const PAGE_SIZE = 10;
 const POLL_MS = 5000;
 
-// Display-only relabeling — the underlying `source` value in the database is
-// unchanged (still "seed"), this just controls how it reads in the UI. Any
-// other source (e.g. "website") falls back to a title-cased version of the
-// raw value rather than showing it lowercase.
+// Display-only — the stored `source` value is unchanged, this just controls
+// how it reads in the UI.
 const SOURCE_LABELS: Record<string, string> = { seed: "Import" };
 function displaySource(source: string): string {
   return SOURCE_LABELS[source] ?? titleCase(source);
@@ -62,8 +65,7 @@ export function LeadsTable() {
   const [selected, setSelected] = useState<LeadWithDetails | null>(null);
   const [reprocessing, setReprocessing] = useState(false);
 
-  // Reset to page 1 whenever a filter changes, without an Effect (React's
-  // documented "adjust state during render" pattern).
+  // Reset to page 1 on filter change — adjusted during render, not an Effect.
   const filterKey = `${tempFilter}|${statusFilter}|${search}`;
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   if (filterKey !== lastFilterKey) {
@@ -120,7 +122,9 @@ export function LeadsTable() {
           </Tabs>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder="Status">
+                {(value: StatusFilter) => STATUS_FILTER_LABELS[value] ?? "Status"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {STATUS_FILTERS.map((s) => (
@@ -181,7 +185,20 @@ export function LeadsTable() {
             )}
 
             {pageItems.map((lead) => (
-              <TableRow key={lead.id} className="cursor-pointer" onClick={() => setSelected(lead)}>
+              <TableRow
+                key={lead.id}
+                tabIndex={0}
+                role="button"
+                aria-label={`View details for ${lead.name}`}
+                className="cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => setSelected(lead)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(lead);
+                  }
+                }}
+              >
                 <TableCell className="py-3 text-left">
                   <div className="font-semibold text-foreground">{lead.name}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">{lead.company || lead.email}</div>

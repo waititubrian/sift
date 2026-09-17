@@ -1,9 +1,6 @@
 import { ParsedLead, ScoringResult, IntegrationAttempt } from "./types";
 
-/**
- * CRM writes go through this interface so the CRM can be swapped (Airtable -> HubSpot,
- * per the spec) without touching scoring or notification logic.
- */
+/** Writes go through this interface so the CRM can be swapped without touching scoring or notification logic. */
 interface CrmAdapter {
   upsert(lead: ParsedLead & { id: string }, analysis: ScoringResult): Promise<IntegrationAttempt>;
 }

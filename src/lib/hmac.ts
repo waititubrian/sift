@@ -1,11 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-/**
- * Verifies a per-source HMAC signature (header: X-Sift-Signature, hex-encoded
- * HMAC-SHA256 of the raw request body). If no secret is configured for the
- * source, the request is accepted unsigned — that's the default for the demo
- * form, and the point at which a real external webhook should get a secret.
- */
+/** Sources with no configured secret accept unsigned requests. */
 export function verifySignature(source: string, rawBody: string, signatureHeader: string | null): boolean {
   const secret = process.env[`INTAKE_SECRET_${source.toUpperCase()}`];
   if (!secret) return true;

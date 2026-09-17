@@ -62,7 +62,7 @@ async function sendFallbackEmail(lead: ParsedLead, analysis: ScoringResult): Pro
     if (error) {
       return { target: "EMAIL", status: "FAILED", detail: error.message };
     }
-    return { target: "EMAIL", status: "SUCCESS", detail: `Email sent to ${to}` };
+    return { target: "EMAIL", status: "SUCCESS", detail: "Email fallback sent" };
   } catch (err) {
     return {
       target: "EMAIL",

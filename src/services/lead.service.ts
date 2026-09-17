@@ -4,11 +4,7 @@ import { notifyTeam } from "@/lib/notify";
 import { leadRepository, qualificationRepository, routingLogRepository } from "@/repositories";
 import { ParsedLead, LeadStatus, Temperature } from "@/lib/types";
 
-/**
- * Business logic for leads: routes call these methods, never a repository or
- * Prisma directly. Repositories only ever talk to Prisma; adapters
- * (scoring/crm/notify) only ever talk to their external service.
- */
+/** Routes call these methods only — never a repository or Prisma directly. */
 export const leadService = {
   /** parseLead -> scoreWithAI -> upsertCRM -> notifyTeam -> logResult */
   async create(parsed: ParsedLead) {
@@ -53,8 +49,7 @@ export const leadService = {
       },
     ]);
 
-    // Reprocessing only re-scores; it doesn't re-notify, so a lead already
-    // routed stays routed unless the new score disqualifies it outright.
+    // Stays ROUTED unless the new score disqualifies it — reprocessing never re-notifies.
     const status: LeadStatus =
       analysis.temperature === "COLD" ? "DISQUALIFIED" : lead.status === "ROUTED" ? "ROUTED" : "QUALIFIED";
     const updatedLead = await leadRepository.updateStatus(lead.id, status);

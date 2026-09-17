@@ -60,7 +60,7 @@ export default function ApiDocsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader active="docs" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-14 px-6 py-16">
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-14 px-6 py-16">
         <div className="flex flex-col gap-3">
           <p className="font-mono text-xs tracking-wide text-muted-foreground uppercase">API reference</p>
           <h1 className="text-3xl font-semibold sm:text-4xl">Three endpoints. That&apos;s the whole surface.</h1>
@@ -122,6 +122,9 @@ export default function ApiDocsPage() {
               <code className="font-mono text-foreground">400</code> — request body failed validation
             </li>
             <li>
+              <code className="font-mono text-foreground">429</code> — rate limit exceeded (20 requests/minute per source)
+            </li>
+            <li>
               <code className="font-mono text-foreground">500</code> — the pipeline itself failed
             </li>
           </ul>
@@ -167,12 +170,12 @@ export default function ApiDocsPage() {
 function Endpoint({ method, path, children }: { method: string; path: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-4 border-t border-border pt-10 first:border-t-0 first:pt-0">
-      <div className="flex flex-wrap items-center gap-2.5">
+      <h3 className="flex flex-wrap items-center gap-2.5">
         <Badge variant="secondary" className="font-mono">
           {method}
         </Badge>
         <code className="font-mono text-sm font-medium">{path}</code>
-      </div>
+      </h3>
       {children}
     </section>
   );

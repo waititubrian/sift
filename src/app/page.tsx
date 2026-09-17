@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader active="home" />
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-20 px-6 py-16">
+      <main id="main" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-20 px-6 py-16">
         {/* Hero */}
         <div className="flex flex-col gap-5">
           <p className="font-mono text-xs tracking-wide text-muted-foreground uppercase">

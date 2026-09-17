@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { verifySignature } from "@/lib/hmac";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { leadService } from "@/services/lead.service";
 
 const intakeSchema = z.object({
@@ -12,6 +13,11 @@ const intakeSchema = z.object({
 
 export async function POST(request: NextRequest, ctx: RouteContext<"/api/intake/[source]">) {
   const { source } = await ctx.params;
+
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!checkRateLimit(`${source}:${ip}`)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
   const rawBody = await request.text();
   const signature = request.headers.get("x-sift-signature");

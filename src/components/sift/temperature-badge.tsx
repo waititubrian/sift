@@ -2,10 +2,12 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Temperature } from "@/lib/types";
 
+// Darkened shades, not the raw tokens — raw --cold/--warm/--hot fail WCAG AA
+// as badge text on their own /10 background in light mode.
 const styles: Record<Temperature, string> = {
-  COLD: "border-cold/30 bg-cold/10 text-cold",
-  WARM: "border-warm/30 bg-warm/10 text-warm",
-  HOT: "border-hot/30 bg-hot/10 text-hot",
+  COLD: "border-cold/30 bg-cold/10 text-[#376F9F] dark:text-cold",
+  WARM: "border-warm/30 bg-warm/10 text-[#936016] dark:text-warm",
+  HOT: "border-hot/30 bg-hot/10 text-[#AD3D27] dark:text-hot",
 };
 
 const labels: Record<Temperature, string> = {

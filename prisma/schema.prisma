@@ -2,10 +2,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// DATABASE_URL: Neon's pooled connection string in production (required for
-// Vercel serverless functions). DIRECT_URL: Neon's direct/unpooled connection
-// string, used only for migrations. Locally both point at the same Docker
-// Postgres instance. See README.md.
+// DIRECT_URL bypasses Neon's pooler — required for migrations.
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
@@ -72,8 +69,7 @@ model Qualification {
   createdAt         DateTime    @default(now())
 }
 
-/// A timestamped record of a routing/notification attempt for a lead
-/// (CRM write, Slack post, email fallback), kept even when it fails.
+/// A routing/notification attempt (CRM, Slack, email), kept even when it fails.
 model RoutingLog {
   id          String            @id @default(cuid())
   leadId      String
