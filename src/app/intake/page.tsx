@@ -11,7 +11,7 @@ export default function IntakePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader active="intake" />
-      <main id="main" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-6 py-12">
+      <main id="main" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-12">
         <div className="flex flex-col gap-3">
           <p className="font-mono text-xs tracking-wide text-muted-foreground uppercase">
             Automated lead qualification

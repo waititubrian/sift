@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Funnel } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/sift/theme-toggle";
+import { MobileNav } from "@/components/sift/mobile-nav";
 
 export function SiteHeader({
   active,
@@ -17,13 +18,14 @@ export function SiteHeader({
         Skip to content
       </a>
       <header className="sticky top-0 z-10 border-b border-border bg-background">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <div className="relative mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <Link href="/" className="flex items-center gap-2">
             <Funnel className="size-4.5 text-warm" strokeWidth={2.25} />
             <span className="font-heading text-lg font-semibold">Sift</span>
           </Link>
-          <div className="flex items-center gap-5">
-            <nav className="flex items-center gap-5 text-sm">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <MobileNav active={active} />
+            <nav className="hidden items-center gap-5 text-sm sm:flex">
               <Link
                 href="/intake"
                 className={active === "intake" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
