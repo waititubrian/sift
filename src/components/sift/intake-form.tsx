@@ -94,6 +94,10 @@ export function IntakeForm() {
       setActiveStep(5);
       setResult(data);
       setPhase("done");
+      setName("");
+      setEmail("");
+      setCompany("");
+      setMessage("");
       toast.success(`Lead scored ${data.qualification.score} — ${data.qualification.temperature}`);
     } catch (err) {
       if (intervalRef.current) clearInterval(intervalRef.current);
