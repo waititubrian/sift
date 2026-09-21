@@ -14,13 +14,16 @@ const STEPS = [
  */
 export function PipelineStepper({ activeIndex }: { activeIndex: number }) {
   return (
-    <div className="flex items-start">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-0">
       {STEPS.map((step, i) => {
         const done = activeIndex > i;
         const active = activeIndex === i;
         return (
-          <div key={step.label} className="flex flex-1 items-start last:flex-none">
-            <div className="flex flex-col items-center gap-1.5 text-center">
+          <div
+            key={step.label}
+            className="flex items-center gap-3 sm:flex-1 sm:items-start sm:gap-0 last:flex-none"
+          >
+            <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-1.5 sm:text-center">
               <div
                 className={cn(
                   "flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
@@ -33,7 +36,7 @@ export function PipelineStepper({ activeIndex }: { activeIndex: number }) {
               >
                 <step.icon className="size-4" strokeWidth={2.25} />
               </div>
-              <div className="w-20">
+              <div className="min-w-0 sm:w-20">
                 <div
                   className={cn(
                     "text-xs font-medium",
@@ -48,7 +51,7 @@ export function PipelineStepper({ activeIndex }: { activeIndex: number }) {
             {i < STEPS.length - 1 && (
               <div
                 className={cn(
-                  "mt-4 h-px flex-1 transition-colors duration-300",
+                  "hidden transition-colors duration-300 sm:mt-4 sm:block sm:h-px sm:flex-1",
                   activeIndex > i ? "bg-primary" : "bg-border"
                 )}
               />

@@ -14,7 +14,7 @@ export default function DocsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader active="docs" />
-      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-14 px-6 py-16">
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-10 sm:gap-14 sm:px-6 sm:py-16">
         <div className="flex flex-col gap-3">
           <p className="font-mono text-xs tracking-wide text-muted-foreground uppercase">Documentation</p>
           <h1 className="text-3xl font-semibold sm:text-4xl">Everything you need to send Sift a lead.</h1>

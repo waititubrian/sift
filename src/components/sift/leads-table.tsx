@@ -109,7 +109,7 @@ export function LeadsTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <Tabs value={tempFilter} onValueChange={(v) => setTempFilter(v as TempFilter)}>
             <TabsList>
@@ -136,20 +136,20 @@ export function LeadsTable() {
           </Select>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search leads…"
-              className="w-56 pl-8"
+              className="w-full pl-8 sm:w-56"
             />
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">Refreshes every {POLL_MS / 1000}s</span>
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
